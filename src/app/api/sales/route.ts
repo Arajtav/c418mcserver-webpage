@@ -10,8 +10,12 @@ export async function GET(request: NextRequest) {
 
     // There is no search by price, because this will be done on client side, so ui can have slider with price range
     sales = sales.filter((s: SaleDataT) => {
-        if (request.nextUrl.searchParams.has("mcitem") && s.mcItemId != request.nextUrl.searchParams.get("mcitem")) { return false; }
-        if (request.nextUrl.searchParams.has("seller") && s.shop.seller != request.nextUrl.searchParams.get("seller")) { return false; }
+        // ts moment
+        let tmp: string | null;
+        tmp = request.nextUrl.searchParams.get("mcitem");
+        if (tmp != null && !s.mcItemId.includes(tmp.toLowerCase())) { return false; }
+        tmp = request.nextUrl.searchParams.get("seller");
+        if (tmp != null && !s.shop.seller.toLowerCase().includes(tmp.toLowerCase())) { return false; }
         return true;
     });
 

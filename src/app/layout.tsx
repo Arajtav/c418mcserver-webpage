@@ -21,7 +21,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en">
-            <body>{children}</body>
+            <body className="text-neutral-200">{children}</body>
         </html>
     );
 }
