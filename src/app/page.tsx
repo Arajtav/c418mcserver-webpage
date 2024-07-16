@@ -8,10 +8,19 @@ function nicePriceString(price: number, quantity: number): string {
 }
 
 function SaleEntry({s}: {s: SaleDataT}) {
+    const [imgurl, setImgurl] = useState<string>("");
+
+    // TODO: OPTIMIZE THAT, WHY AM I EVEN USING API
+    useEffect(() => {
+        fetch(`/api/textures?t=${s.mcItemId}`).then((res) => res.text()).then((data) => {
+            setImgurl(data);
+        });
+    }, []);
+
     return (
         <div className="w-full text-2xl flex flex-row h-16 bg-neutral-800/75 backdrop-blur-xl backdrop-saturate-150 items-center justify-between">
             <div className="h-full flex flex-row items-center w-1/3">
-                <div className="aspect-square h-12 border mx-2"></div> { /* TODO: IMAGE HERE, FROM MC ITEM ID */ }
+                <img alt="" className="aspect-square h-12 mx-2" src={imgurl} />
                 <div>{s.mcItemId}</div> { /* TODO: MAKE FIRST LETTERS OF WORDS UPPERCASE */ }
             </div>
             <div className="h-full w-1/3 flex flex-row items-center justify-center">
