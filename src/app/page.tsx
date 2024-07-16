@@ -8,7 +8,7 @@ function nicePriceString(price: number, quantity: number): string {
 }
 
 function SaleEntry({s}: {s: SaleDataT}) {
-    const [imgurl, setImgurl] = useState<string>("");
+    const [imgurl, setImgurl] = useState<string>("/missing.png");
 
     // TODO: OPTIMIZE THAT, WHY AM I EVEN USING API
     useEffect(() => {
@@ -41,8 +41,17 @@ export default function Home() {
     // TODO: EXECUTE SOME TIME AFTER LAST INPUT EVENT, INSTEAD ON EVERY INPUT CHANGE
     useEffect(() => {
         let url: string = `/api/sales${seller + itemid == "" ? "" : "?"}${seller == "" ? "" : "seller=" + seller}${seller != "" && itemid != "" ? "&" : ""}${itemid == "" ? "" : "mcitem=" + itemid}`;
-        fetch(url).then((res) => res.json()).then((data) => {
-            setSales(data);
+        fetch(url).then((res) => res.json()).then((data: SaleDataT[]) => {
+            setSales(data.toSorted((a: SaleDataT, b: SaleDataT) => {
+                // cheapest stuff first
+                let pd: number = (b.quantity/b.price)-(a.quantity/a.price);
+                if (pd != 0) { return pd; }
+                // if price is the same for both items, return one which has lower quantity
+                let gd: number = (a.quantity-b.quantity);
+                if (gd != 0) { return gd; }
+                // if items are literally the same mine are better hahahah (i mean, not the same because there is no test for location and mc item id but whatever)
+                return a.shop.seller == "Arajtav" ? b.shop.seller == "Arajtav" ? 0 : -1 : 1;
+            }));
         });
     }, [itemid, seller]);
 
