@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
         {mcItemId: "calcite",   quantity: 2*64, price: 3, shop: {seller: "Arajtav", location: {x: 0, y: 0, z: 0}}},
     ];
 
-    // TODO: search by price, where price is quantity/price*64, so price per stack
+    // There is no search by price, because this will be done on client side, so ui can have slider with price range
     sales = sales.filter((s: SaleDataT) => {
         if (request.nextUrl.searchParams.has("mcitem") && s.mcItemId != request.nextUrl.searchParams.get("mcitem")) { return false; }
         if (request.nextUrl.searchParams.has("seller") && s.shop.seller != request.nextUrl.searchParams.get("seller")) { return false; }
