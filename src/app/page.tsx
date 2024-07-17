@@ -28,12 +28,14 @@ export default function Home() {
     const [sales, setSales] = useState<SaleDataT[]>([]);
     const [itemid, setItemid] = useState<string>("");
     const [seller, setSeller] = useState<string>("");
+    const [maxPrice, setMaxPrice] = useState<number>(0);
 
     // TODO: EXECUTE SOME TIME AFTER LAST INPUT EVENT, INSTEAD ON EVERY INPUT CHANGE
     useEffect(() => {
         let url: string = `/api/sales${seller + itemid == "" ? "" : "?"}${seller == "" ? "" : "seller=" + seller}${seller != "" && itemid != "" ? "&" : ""}${itemid == "" ? "" : "mcitem=" + itemid}`;
         fetch(url).then((res) => res.json()).then((data: SaleDataT[]) => {
-            setSales(data.toSorted((a: SaleDataT, b: SaleDataT) => {
+            // temporary variable is needed here, because accessing value after setSales() is still giving me old value
+            let tmp: SaleDataT[] = data.toSorted((a: SaleDataT, b: SaleDataT) => {
                 // cheapest stuff first
                 let pd: number = (b.quantity/b.price)-(a.quantity/a.price);
                 if (pd != 0) { return pd; }
@@ -42,9 +44,14 @@ export default function Home() {
                 if (gd != 0) { return gd; }
                 // if items are literally the same mine are better hahahah (i mean, not the same because there is no test for location and mc item id but whatever)
                 return a.shop.seller == "Arajtav" ? b.shop.seller == "Arajtav" ? 0 : -1 : 1;
-            }));
+            });
+            setSales(tmp);
+            setMaxPrice(tmp.length == 0 ? 0 : tmp[tmp.length-1].price*64/tmp[tmp.length-1].quantity);
         });
     }, [itemid, seller]);
+
+    let mx: number = sales.length == 0 ? 0 : sales[sales.length-1].price*64/sales[sales.length-1].quantity;
+    let mi: number = sales.length == 0 ? 0 : sales[0].price*64/sales[0].quantity;
 
     return (
         <div className="w-screen h-screen overflow-clip flex flex-row portrait:flex-col">
@@ -52,10 +59,16 @@ export default function Home() {
                 <div className="w-full flex items-center justify-center flex-col">
                     <input type="text" placeholder="search by item id" className="focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setItemid(e.currentTarget.value)}} />
                     <input type="text" placeholder="search by seller"  className="focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setSeller(e.currentTarget.value)}} />
+                    <div className="w-full h-24 px-4 flex justify-center items-start text-2xl flex-col text-neutral-400">
+                        <div>{`price per stack: ${maxPrice}`}</div>
+                        <input id="ipm" type="range" className={`w-full drop-shadow-sm ${mi == mx ? "invisible" : ""}`} step="0.001" value={maxPrice <= mx ? maxPrice >= mi ? maxPrice : mi : mx} min={mi} max={mx} onInput={(e) => {setMaxPrice(Number(e.currentTarget.value))}} />
+                    </div>
                 </div>
             </nav>
             <main className="h-full flex-grow overflow-scroll p-2 md:p-4 lg:p-8">
-                {sales.map((sale, i) => {
+                {sales.filter((sale) => {
+                    return maxPrice == 0 || 64*sale.price/sale.quantity <= maxPrice;
+                }).map((sale, i) => {
                     return <SaleEntry s={sale} key={i} />;
                 })}
             </main>
