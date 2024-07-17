@@ -9,12 +9,12 @@ function nicePriceString(price: number, quantity: number): string {
 
 function SaleEntry({s}: {s: SaleDataT}) {
     return (
-        <div className="w-full text-2xl flex flex-row h-16 bg-neutral-800/75 backdrop-blur-xl backdrop-saturate-150 items-center justify-between">
-            <div className="h-full flex flex-row items-center w-1/3">
+        <div className="w-full text-md lg:text-lg xl:text-2xl flex flex-row h-16 bg-neutral-800/75 backdrop-blur-xl backdrop-saturate-150 items-center justify-between">
+            <div className="h-full lg:w-1/3 flex flex-row items-center">
                 <img alt="" className="aspect-square h-12 mx-2" src={`/api/textures?t=${s.mcItemId}`} />
-                <div>{s.mcItemId}</div> { /* TODO: MAKE FIRST LETTERS OF WORDS UPPERCASE */ }
+                <div className="hidden md:block">{s.mcItemId}</div> { /* TODO: MAKE FIRST LETTERS OF WORDS UPPERCASE */ }
             </div>
-            <div className="h-full w-1/3 flex flex-row items-center justify-center">
+            <div className="h-full w-1/3 flex-grow lg:flex-grow-0 flex flex-row items-center justify-center">
                 {nicePriceString(s.price, s.quantity)}
             </div>
             <div className="h-full w-1/3 flex flex-row items-center justify-end pr-2">
@@ -47,14 +47,14 @@ export default function Home() {
     }, [itemid, seller]);
 
     return (
-        <div className="w-screen h-screen overflow-clip flex flex-row">
-            <nav className="h-full w-72 bg-neutral-800/70 backdrop-blur-xl backdrop-saturate-150 flex flex-col justify-between drop-shadow-md">
+        <div className="w-screen h-screen overflow-clip flex flex-row portrait:flex-col">
+            <nav className="h-full portrait:h-fit w-72 portrait:w-full bg-neutral-800/70 backdrop-blur-xl backdrop-saturate-150 flex flex-col justify-between drop-shadow-md">
                 <div className="w-full flex items-center justify-center flex-col">
                     <input type="text" placeholder="search by item id" className="focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setItemid(e.currentTarget.value)}} />
                     <input type="text" placeholder="search by seller"  className="focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setSeller(e.currentTarget.value)}} />
                 </div>
             </nav>
-            <main className="h-full flex-grow overflow-scroll p-8">
+            <main className="h-full flex-grow overflow-scroll p-2 md:p-4 lg:p-8">
                 {sales.map((sale, i) => {
                     return <SaleEntry s={sale} key={i} />;
                 })}
