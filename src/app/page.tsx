@@ -11,7 +11,7 @@ function SaleEntry({s}: {s: SaleDataT}) {
     return (
         <div className="w-full text-md lg:text-lg xl:text-2xl flex flex-row h-16 bg-neutral-800/75 backdrop-blur-xl backdrop-saturate-150 items-center justify-between">
             <div className="h-full lg:w-1/3 flex flex-row items-center">
-                <img alt="" className="aspect-square h-12 mx-2" src={`/api/textures?t=${s.mcItemId}`} />
+                <img alt="" className="aspect-square h-12 mx-2" src={`/api/textures/1.20.2?t=${s.mcItemId}`} />
                 <div className="hidden md:block">{s.mcItemId}</div> { /* TODO: MAKE FIRST LETTERS OF WORDS UPPERCASE */ }
             </div>
             <div className="h-full w-1/3 flex-grow lg:flex-grow-0 flex flex-row items-center justify-center">
