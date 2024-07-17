@@ -50,9 +50,8 @@ export default function Home() {
         <div className="w-screen h-screen overflow-clip flex flex-row">
             <nav className="h-full w-72 bg-neutral-800/70 backdrop-blur-xl backdrop-saturate-150 flex flex-col justify-between drop-shadow-md">
                 <div className="w-full flex items-center justify-center flex-col">
-                    { /* TODO: FOCUS CSS ON THOSE */ }
-                    <input type="text" placeholder="search by item id" className="p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setItemid(e.currentTarget.value)}} />
-                    <input type="text" placeholder="search by seller"  className="p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setSeller(e.currentTarget.value)}} />
+                    <input type="text" placeholder="search by item id" className="focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setItemid(e.currentTarget.value)}} />
+                    <input type="text" placeholder="search by seller"  className="focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setSeller(e.currentTarget.value)}} />
                 </div>
             </nav>
             <main className="h-full flex-grow overflow-scroll p-8">
