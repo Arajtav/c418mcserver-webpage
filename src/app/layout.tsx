@@ -1,5 +1,15 @@
 import "./globals.css";
 
+import { VT323 } from "next/font/google";
+
+// no fallbacks, also maybe change that font so something more readable
+const font = VT323({
+    weight: ['400'],
+    subsets: ["latin-ext"],
+    display: 'swap',
+    fallback: ['VT323'],
+});
+
 import { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -20,7 +30,7 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="en">
+        <html lang="en" className={font.className}>
             <body className="text-neutral-200">{children}</body>
         </html>
     );
