@@ -13,7 +13,7 @@ function SaleEntry({s}: {s: SaleDataT}) {
         <div className="w-full text-base lg:text-lg xl:text-2xl flex flex-row h-16 bg-neutral-800/75 backdrop-blur-xl backdrop-saturate-150 items-center justify-between">
             <div className="h-full lg:w-1/3 flex flex-row items-center">
                 <img alt="" className="aspect-square h-12 mx-2" src={`/api/textures/1.20.2?t=${s.mcItemId}`} />
-                <div className="hidden md:block">{s.mcItemId}</div> { /* TODO: MAKE FIRST LETTERS OF WORDS UPPERCASE */ }
+                <div className="hidden md:block capitalize">{s.mcItemId.replaceAll("_", " ")}</div>
             </div>
             <div className="h-full w-1/3 flex-grow lg:flex-grow-0 flex flex-row items-center justify-center">
                 {nicePriceString(s.price, s.quantity)}
@@ -40,7 +40,9 @@ export default function Home() {
 
     useEffect(() => {
         let tmp: SaleDataT[] = sales.filter((sale) => {
-            return sale.shop.seller.includes(seller) && sale.mcItemId.includes(itemid);
+            return  sale.shop.seller.includes(seller.trim()) &&                                                         // seller
+                    (sale.mcItemId.includes(itemid.trim().replaceAll(" ", "_")) || sale.mcItemId.includes(itemid)) &&   // real or displayed item name
+                    (itemid.trim().length == 0 && itemid.length != 0 ? sale.mcItemId.includes("_") : true);             // spaces, because without that typing single space would still display every item
         }).toSorted((a: SaleDataT, b: SaleDataT) => {
                 // cheapest stuff first
                 let pd: number = (b.quantity/b.price)-(a.quantity/a.price);
