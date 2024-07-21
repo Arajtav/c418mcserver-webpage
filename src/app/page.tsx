@@ -31,6 +31,8 @@ export default function Home() {
     const [itemid, setItemid] = useState<string>("");
     const [seller, setSeller] = useState<string>("");
     const [maxPrice, setMaxPrice] = useState<number>(0);
+    const [mi, setMi] = useState<number>(0);
+    const [mx, setMx] = useState<number>(0);
 
     useEffect(() => {
         fetch("/api/sales").then((res) => res.json()).then((data: SaleDataT[]) => {
@@ -54,11 +56,13 @@ export default function Home() {
                 return a.shop.seller == "Arajtav" ? b.shop.seller == "Arajtav" ? 0 : -1 : 1;
         });
         setSalesFiltered(tmp);
-        setMaxPrice(maxPrice == 0 ? tmp.length == 0 ? 0 : tmp[tmp.length-1].price*64/tmp[tmp.length-1].quantity : maxPrice);
-    }, [itemid, seller, sales]);
+        let lmx: number = tmp.length == 0 ? 0 : tmp[tmp.length-1].price*64/tmp[tmp.length-1].quantity;
+        let lmi: number = tmp.length == 0 ? 0 : tmp[0].price*64/tmp[0].quantity;
+        setMi(lmi);
+        setMx(lmx);
 
-    let mx: number = salesFiltered.length == 0 ? 0 : salesFiltered[salesFiltered.length-1].price*64/salesFiltered[salesFiltered.length-1].quantity;
-    let mi: number = salesFiltered.length == 0 ? 0 : salesFiltered[0].price*64/salesFiltered[0].quantity;
+        setMaxPrice(maxPrice == 0 ? lmx : maxPrice <= lmx ? maxPrice >= lmi ? maxPrice : lmi : lmx);
+    }, [itemid, seller, sales]);
 
     return (
         <div className="w-screen h-screen overflow-clip flex flex-row portrait:flex-col">
@@ -67,7 +71,7 @@ export default function Home() {
                 <input type="text" placeholder="search by seller"  className="focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setSeller(e.currentTarget.value)}} />
                 <div className="w-full h-24 px-4 flex justify-center items-start text-2xl flex-col text-neutral-400">
                     <div>{`max stack price: ${maxPrice}`}</div>
-                    <input id="ipm" type="range" className={`w-full drop-shadow-sm accent-neutral-400 hover:accent-neutral-300 focus:outline-none focus:accent-neutral-300 ${mi == mx ? "invisible" : ""}`} step="0.001" value={maxPrice <= mx ? maxPrice >= mi ? maxPrice : mi : mx} min={mi} max={mx} onInput={(e) => {setMaxPrice(Number(e.currentTarget.value))}} />
+                    <input id="ipm" type="range" className={`w-full drop-shadow-sm accent-neutral-400 hover:accent-neutral-300 focus:outline-none focus:accent-neutral-300 ${mi == mx ? "invisible" : ""}`} step="0.001" value={maxPrice} min={mi} max={mx} onInput={(e) => {setMaxPrice(Number(e.currentTarget.value))}} />
                 </div>
             </Sidebar>
             <main className="h-full flex-grow overflow-scroll portrait:p-2 p-2 md:p-4 lg:p-8">
