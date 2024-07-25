@@ -67,11 +67,10 @@ export default function Home() {
         });
         setSalesFiltered(tmp);
         let lmx: number = tmp.length == 0 ? 0 : tmp[tmp.length-1].price*64/tmp[tmp.length-1].quantity;
-        let lmi: number = tmp.length == 0 ? 0 : tmp[0].price*64/tmp[0].quantity;
-        setMi(lmi);
+        setMi(tmp.length == 0 ? 0 : tmp[0].price*64/tmp[0].quantity);
         setMx(lmx);
 
-        setMaxPrice(maxPrice == 0 ? lmx : maxPrice <= lmx ? maxPrice >= lmi ? maxPrice : lmi : lmx);    // TODO: THIS IS BAD UX. CLIP ONLY DISPLAYED VERSION, OR SOMETHING
+        setMaxPrice(maxPrice == 0 ? lmx : maxPrice);
     }, [itemid, seller, sales, conf_sd, conf_lsd]);
 
     return (
@@ -91,15 +90,16 @@ export default function Home() {
                         <input type="text" placeholder="search by item id" className="focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setItemid(e.currentTarget.value)}} />
                         <input type="text" placeholder="search by seller"  className="focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setSeller(e.currentTarget.value)}} />
                         <div className="w-full h-24 px-4 flex justify-center items-start text-2xl flex-col text-neutral-400">
-                            <div>{`max stack price: ${maxPrice}`}</div>
-                            <input id="ipm" type="range" className={`w-full drop-shadow-sm accent-neutral-400 hover:accent-neutral-300 focus:outline-none focus:accent-neutral-300 ${mi == mx ? "invisible" : ""}`} step="0.001" value={maxPrice} min={mi} max={mx} onInput={(e) => {setMaxPrice(Number(e.currentTarget.value))}} />
+                            <div>{`max stack price: ${maxPrice <= mx ? maxPrice >= mi ? maxPrice : mi : mx}`}</div>
+                            <input id="ipm" type="range" className={`w-full drop-shadow-sm accent-neutral-400 hover:accent-neutral-300 focus:outline-none focus:accent-neutral-300 ${mi == mx ? "invisible" : ""}`} step="0.001" value={maxPrice <= mx ? maxPrice >= mi ? maxPrice : mi : mx} min={mi} max={mx} onInput={(e) => {setMaxPrice(Number(e.currentTarget.value))}} />
                         </div>
                     </>
                 }
             </Sidebar>
             <main className="h-full flex-grow overflow-scroll portrait:p-2 p-2 md:p-4 lg:p-8">
                 {salesFiltered.filter((sale) => {
-                    return (maxPrice == 0 || 64*sale.price/sale.quantity <= maxPrice);
+                    let tmp = maxPrice <= mx ? maxPrice >= mi ? maxPrice : mi : mx;
+                    return (tmp == 0 || 64*sale.price/sale.quantity <= tmp);
                 }).map((sale, i) => {
                     return <SaleEntry s={sale} key={i} />;
                 })}
