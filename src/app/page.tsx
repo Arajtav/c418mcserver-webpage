@@ -3,6 +3,7 @@
 import { Sidebar } from "@/sidebar";
 import { SaleDataT } from "@/types";
 import { useEffect, useState } from "react";
+import { dist3d } from "./utils";
 
 function nicePriceString(price: number, quantity: number): string {
     return `${quantity % 64 ? quantity : quantity / 64}${quantity % 64 ? "" : quantity == 64 ? " stack" : " stacks"} for ${price} ${price == 1 ? "diamond" : "diamonds"}`;
@@ -26,6 +27,7 @@ function SaleEntry({s}: {s: SaleDataT}) {
 }
 
 export default function Home() {
+    // TODO: WHY DO I NEED THAT MANY
     const [sales, setSales] = useState<SaleDataT[]>([]);
     const [salesFiltered, setSalesFiltered] = useState<SaleDataT[]>([]);
     const [itemid, setItemid] = useState<string>("");
@@ -33,6 +35,13 @@ export default function Home() {
     const [maxPrice, setMaxPrice] = useState<number>(0);
     const [mi, setMi] = useState<number>(0);
     const [mx, setMx] = useState<number>(0);
+    const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
+
+    // all of this stuff is needed for config
+    const [conf_sd, conf_setSd] = useState<number>(Number(localStorage.getItem("sd")));
+    useEffect(() => { localStorage.setItem("sd", conf_sd.toString()); }, [conf_sd]);
+    const [conf_lsd, conf_setLsd] = useState<boolean>(localStorage.getItem("lsd") == "true");
+    useEffect(() => { localStorage.setItem("lsd", String(conf_lsd)); }, [conf_lsd]);
 
     useEffect(() => {
         fetch("/api/sales").then((res) => res.json()).then((data: SaleDataT[]) => {
@@ -44,8 +53,9 @@ export default function Home() {
         let tmp: SaleDataT[] = sales.filter((sale) => {
             return  sale.shop.seller.includes(seller.trim()) &&                                                         // seller
                     (sale.mcItemId.includes(itemid.trim().replaceAll(" ", "_")) || sale.mcItemId.includes(itemid)) &&   // real or displayed item name
-                    (itemid.trim().length == 0 && itemid.length != 0 ? sale.mcItemId.includes("_") : true);             // spaces, because without that typing single space would still display every item
-        }).toSorted((a: SaleDataT, b: SaleDataT) => {
+                    (itemid.trim().length == 0 && itemid.length != 0 ? sale.mcItemId.includes("_") : true) &&           // spaces, because without that typing single space would still display every item
+                    (!conf_lsd || conf_sd >= dist3d(sale.shop.location, {x: 0, y: 0, z: 0}));                           // last check because expensive calc.
+                }).toSorted((a: SaleDataT, b: SaleDataT) => {
                 // cheapest stuff first
                 let pd: number = (b.quantity/b.price)-(a.quantity/a.price);
                 if (pd != 0) { return pd; }
@@ -61,18 +71,31 @@ export default function Home() {
         setMi(lmi);
         setMx(lmx);
 
-        setMaxPrice(maxPrice == 0 ? lmx : maxPrice <= lmx ? maxPrice >= lmi ? maxPrice : lmi : lmx);
-    }, [itemid, seller, sales]);
+        setMaxPrice(maxPrice == 0 ? lmx : maxPrice <= lmx ? maxPrice >= lmi ? maxPrice : lmi : lmx);    // TODO: THIS IS BAD UX. CLIP ONLY DISPLAYED VERSION, OR SOMETHING
+    }, [itemid, seller, sales, conf_sd, conf_lsd]);
 
     return (
         <div className="w-screen h-screen overflow-clip flex flex-row portrait:flex-col">
-            <Sidebar links={[{title: "CREDITS", href: "/credits"}]}>
-                <input type="text" placeholder="search by item id" className="focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setItemid(e.currentTarget.value)}} />
-                <input type="text" placeholder="search by seller"  className="focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setSeller(e.currentTarget.value)}} />
-                <div className="w-full h-24 px-4 flex justify-center items-start text-2xl flex-col text-neutral-400">
-                    <div>{`max stack price: ${maxPrice}`}</div>
-                    <input id="ipm" type="range" className={`w-full drop-shadow-sm accent-neutral-400 hover:accent-neutral-300 focus:outline-none focus:accent-neutral-300 ${mi == mx ? "invisible" : ""}`} step="0.001" value={maxPrice} min={mi} max={mx} onInput={(e) => {setMaxPrice(Number(e.currentTarget.value))}} />
-                </div>
+            <Sidebar links={[{title: "SETTINGS", href: () => setSettingsOpen(!settingsOpen)}, {title: "CREDITS", href: "/credits"}]}>
+                {settingsOpen ?
+                    <>
+                        <label className="p-4 w-full h-16 drop-shadow-sm text-2xl text-neutral-400">
+                            limit search distance: <input type="checkbox" checked={conf_lsd} onChange={(e) => {conf_setLsd(e.currentTarget.checked)}} />
+                        </label>
+                        <label className="p-4 w-full h-16 drop-shadow-sm text-2xl text-neutral-400">
+                            search distance: <input className="w-20 bg-transparent" type="number" min="0" value={conf_sd} onInput={(e) => {conf_setSd(Number(e.currentTarget.value))}} />
+                        </label>
+                    </>
+                    :
+                    <>
+                        <input type="text" placeholder="search by item id" className="focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setItemid(e.currentTarget.value)}} />
+                        <input type="text" placeholder="search by seller"  className="focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setSeller(e.currentTarget.value)}} />
+                        <div className="w-full h-24 px-4 flex justify-center items-start text-2xl flex-col text-neutral-400">
+                            <div>{`max stack price: ${maxPrice}`}</div>
+                            <input id="ipm" type="range" className={`w-full drop-shadow-sm accent-neutral-400 hover:accent-neutral-300 focus:outline-none focus:accent-neutral-300 ${mi == mx ? "invisible" : ""}`} step="0.001" value={maxPrice} min={mi} max={mx} onInput={(e) => {setMaxPrice(Number(e.currentTarget.value))}} />
+                        </div>
+                    </>
+                }
             </Sidebar>
             <main className="h-full flex-grow overflow-scroll portrait:p-2 p-2 md:p-4 lg:p-8">
                 {salesFiltered.filter((sale) => {
