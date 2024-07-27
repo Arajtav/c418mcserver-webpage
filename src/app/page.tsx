@@ -2,40 +2,42 @@
 
 import { Sidebar } from "@/sidebar";
 import { SaleDataT } from "@/types";
-import { useEffect, useState } from "react";
+import { SetStateAction, useEffect, useState } from "react";
 import { dist3d } from "./utils";
 
 function nicePriceString(price: number, quantity: number): string {
     return `${quantity % 64 ? quantity : quantity / 64}${quantity % 64 ? "" : quantity == 64 ? " stack" : " stacks"} for ${price} ${price == 1 ? "diamond" : "diamonds"}`;
 }
 
-function SaleEntry({s}: {s: SaleDataT}) {
+function SaleEntry({s, setItemid, setSeller}: {s: SaleDataT, setItemid: React.Dispatch<SetStateAction<string>>, setSeller: React.Dispatch<SetStateAction<string>>}) {
+    function clickSeller() { setSeller(s.shop.seller); }
+    function clickItem() { setItemid(s.mcItemId); }
+
     return (
         <div className="w-full text-base lg:text-lg xl:text-2xl flex flex-row h-16 bg-neutral-800/75 backdrop-blur-xl backdrop-saturate-150 items-center justify-between">
             <div className="h-full lg:w-1/3 flex flex-row items-center">
-                <img alt="" className="aspect-square h-12 mx-2" src={`/api/textures/1.20.2?t=${s.mcItemId}`} />
+                <img alt="" className="cursor-pointer aspect-square h-12 mx-2" src={`/api/textures/1.20.2?t=${s.mcItemId}`} onClick={clickItem} />
                 <div className="hidden md:block capitalize">{s.mcItemId.replaceAll("_", " ")}</div>
             </div>
             <div className="h-full w-1/3 flex-grow lg:flex-grow-0 flex flex-row items-center justify-center">
                 {nicePriceString(s.price, s.quantity)}
             </div>
             <div className="h-full w-1/3 flex flex-row items-center justify-end pr-2">
-                {`${s.shop.seller} at ${s.shop.location.x} ${s.shop.location.y} ${s.shop.location.z}`}
+                <span className="pr-2 cursor-pointer" onClick={clickSeller}>{s.shop.seller}</span>
+                {`at ${s.shop.location.x} ${s.shop.location.y} ${s.shop.location.z}`}
             </div>
         </div>
     );
 }
 
 export default function Home() {
-    // TODO: WHY DO I NEED THAT MANY
-    const [sales, setSales] = useState<SaleDataT[]>([]);
-    const [salesFiltered, setSalesFiltered] = useState<SaleDataT[]>([]);
-    const [itemid, setItemid] = useState<string>("");
-    const [seller, setSeller] = useState<string>("");
-    const [maxPrice, setMaxPrice] = useState<number>(0);
-    const [mi, setMi] = useState<number>(0);
-    const [mx, setMx] = useState<number>(0);
-    const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
+    const [sales, setSales] = useState<SaleDataT[]>([]);                                            // sales returned by fetch, because there is no reason to fetch on every change
+    const [salesFiltered, setSalesFiltered] = useState<SaleDataT[]>([]);                            // sales filtred by seller, item id, and distance
+    const [itemid, setItemid] = useState<string>("");                                               // mc item id from input
+    const [seller, setSeller] = useState<string>("");                                               // seller from input
+    const [maxPrice, setMaxPrice] = useState<number>(0);                                            // max price from input
+    const [priceRange, setPricecRange] = useState<{min: number, max: number}>({min: 0, max: 0});    // min and max price in filtered sales
+    const [settingsOpen, setSettingsOpen] = useState<boolean>(false);                               // for settings tab
 
     // all of this stuff is needed for config
     const [conf_sd, conf_setSd] = useState<number>(Number(localStorage.getItem("sd")));
@@ -67,8 +69,10 @@ export default function Home() {
         });
         setSalesFiltered(tmp);
         let lmx: number = tmp.length == 0 ? 0 : tmp[tmp.length-1].price*64/tmp[tmp.length-1].quantity;
-        setMi(tmp.length == 0 ? 0 : tmp[0].price*64/tmp[0].quantity);
-        setMx(lmx);
+        setPricecRange({
+            min: tmp.length == 0 ? 0 : tmp[0].price*64/tmp[0].quantity,
+            max: lmx,
+        });
 
         setMaxPrice(maxPrice == 0 ? lmx : maxPrice);
     }, [itemid, seller, sales, conf_sd, conf_lsd]);
@@ -87,21 +91,21 @@ export default function Home() {
                     </>
                     :
                     <>
-                        <input type="text" placeholder="search by item id" className="focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setItemid(e.currentTarget.value)}} />
-                        <input type="text" placeholder="search by seller"  className="focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setSeller(e.currentTarget.value)}} />
+                        <input type="text" value={itemid} placeholder="search by item id" className="search-item focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setItemid(e.currentTarget.value)}} />
+                        <input type="text" value={seller} placeholder="search by seller"  className="search-sell focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setSeller(e.currentTarget.value)}} />
                         <div className="w-full h-24 px-4 flex justify-center items-start text-2xl flex-col text-neutral-400">
-                            <div>{`max stack price: ${maxPrice <= mx ? maxPrice >= mi ? maxPrice : mi : mx}`}</div>
-                            <input id="ipm" type="range" className={`w-full drop-shadow-sm accent-neutral-400 hover:accent-neutral-300 focus:outline-none focus:accent-neutral-300 ${mi == mx ? "invisible" : ""}`} step="0.001" value={maxPrice <= mx ? maxPrice >= mi ? maxPrice : mi : mx} min={mi} max={mx} onInput={(e) => {setMaxPrice(Number(e.currentTarget.value))}} />
+                            <div>{`max stack price: ${maxPrice <= priceRange.max ? maxPrice >= priceRange.min ? maxPrice : priceRange.min : priceRange.max}`}</div>
+                            <input id="ipm" type="range" className={`w-full drop-shadow-sm accent-neutral-400 hover:accent-neutral-300 focus:outline-none focus:accent-neutral-300 ${priceRange.min == priceRange.max ? "invisible" : ""}`} step="0.001" value={maxPrice <= priceRange.max ? maxPrice >= priceRange.min ? maxPrice : priceRange.min : priceRange.max} min={priceRange.min} max={priceRange.max} onInput={(e) => {setMaxPrice(Number(e.currentTarget.value))}} />
                         </div>
                     </>
                 }
             </Sidebar>
             <main className="h-full flex-grow overflow-scroll portrait:p-2 p-2 md:p-4 lg:p-8">
                 {salesFiltered.filter((sale) => {
-                    let tmp = maxPrice <= mx ? maxPrice >= mi ? maxPrice : mi : mx;
+                    let tmp = maxPrice <= priceRange.max ? maxPrice >= priceRange.min ? maxPrice : priceRange.min : priceRange.max;
                     return (tmp == 0 || 64*sale.price/sale.quantity <= tmp);
                 }).map((sale, i) => {
-                    return <SaleEntry s={sale} key={i} />;
+                    return <SaleEntry s={sale} key={i} setItemid={setItemid} setSeller={setSeller}/>;
                 })}
             </main>
         </div>
