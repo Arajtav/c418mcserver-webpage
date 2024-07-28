@@ -40,23 +40,26 @@ export default function Home() {
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);                               // for settings tab
 
     // all of this stuff is needed for config
-    const [conf_sd, conf_setSd] = useState<number>(Number(localStorage.getItem("sd")));
-    useEffect(() => { localStorage.setItem("sd", conf_sd.toString()); }, [conf_sd]);
-    const [conf_lsd, conf_setLsd] = useState<boolean>(localStorage.getItem("lsd") == "true");
-    useEffect(() => { localStorage.setItem("lsd", String(conf_lsd)); }, [conf_lsd]);
+    const [conf_sd, conf_setSd] = useState<number | null>(null);
+    const [conf_lsd, conf_setLsd] = useState<boolean | null>(null);
 
     useEffect(() => {
+        conf_setSd(Number(localStorage.getItem("sd")));
+        conf_setLsd(localStorage.getItem("lsd") == "true");
         fetch("/api/sales").then((res) => res.json()).then((data: SaleDataT[]) => {
             setSales(data);
         })
     }, []);
+
+    useEffect(() => { conf_sd !== null ? localStorage.setItem("sd", conf_sd.toString()) : null; }, [conf_sd]);
+    useEffect(() => { conf_lsd !== null ? localStorage.setItem("lsd", String(conf_lsd)) : null; }, [conf_lsd]);
 
     useEffect(() => {
         let tmp: SaleDataT[] = sales.filter((sale) => {
             return  sale.shop.seller.includes(seller.trim()) &&                                                         // seller
                     (sale.mcItemId.includes(itemid.trim().replaceAll(" ", "_")) || sale.mcItemId.includes(itemid)) &&   // real or displayed item name
                     (itemid.trim().length == 0 && itemid.length != 0 ? sale.mcItemId.includes("_") : true) &&           // spaces, because without that typing single space would still display every item
-                    (!conf_lsd || conf_sd >= dist3d(sale.shop.location, {x: 0, y: 0, z: 0}));                           // last check because expensive calc.
+                    (!conf_lsd || (conf_sd === null ? 0 : conf_sd) >= dist3d(sale.shop.location, {x: 0, y: 0, z: 0}));  // last check because expensive calc. conf_sd check should never happen because !null on conf_lsd is true, but who knows
                 }).toSorted((a: SaleDataT, b: SaleDataT) => {
                 // cheapest stuff first
                 let pd: number = (b.quantity/b.price)-(a.quantity/a.price);
@@ -83,10 +86,10 @@ export default function Home() {
                 {settingsOpen ?
                     <>
                         <label className="p-4 w-full h-16 drop-shadow-sm text-2xl text-neutral-400">
-                            limit search distance: <input type="checkbox" checked={conf_lsd} onChange={(e) => {conf_setLsd(e.currentTarget.checked)}} />
+                            limit search distance: <input type="checkbox" checked={conf_lsd !== null ? conf_lsd : false} onChange={(e) => {conf_setLsd(e.currentTarget.checked)}} />
                         </label>
                         <label className="p-4 w-full h-16 drop-shadow-sm text-2xl text-neutral-400">
-                            search distance: <input className="w-20 bg-transparent" type="number" min="0" value={conf_sd} onInput={(e) => {conf_setSd(Number(e.currentTarget.value))}} />
+                            search distance: <input className="w-20 bg-transparent" type="number" min="0" value={conf_sd !== null ? conf_sd : 0} onInput={(e) => {conf_setSd(Number(e.currentTarget.value))}} />
                         </label>
                     </>
                     :
