@@ -9,7 +9,7 @@ export function Sidebar({children, links}: {children?: React.ReactNode, links: {
                     return typeof ln.href === "string" ?
                         <a key={i} href={ln.href} className="p-4 h-16 drop-shadow-sm text-neutral-400 hover:text-neutral-300">{ln.title}</a>
                         :
-                        <div key={i} onClick={ln.href} tabIndex={0} className="foc p-4 h-16 drop-shadow-sm text-neutral-400 hover:text-neutral-300 cursor-pointer">{ln.title}</div>
+                        <div key={i} onClick={ln.href} onKeyDown={(ev) => {ev.key == "Enter" ? ln.href() : null}} tabIndex={0} className="foc p-4 h-16 drop-shadow-sm text-neutral-400 hover:text-neutral-300 cursor-pointer">{ln.title}</div>
                 })}
             </div>
         </nav>
