@@ -32,7 +32,7 @@ function SaleEntry({s, setItemid, setSeller}: {s: SaleDataT, setItemid: React.Di
 
 export default function Home() {
     const [sales, setSales] = useState<SaleDataT[]>([]);                                            // sales returned by fetch, because there is no reason to fetch on every change
-    const [salesFiltered, setSalesFiltered] = useState<SaleDataT[]>([]);                            // sales filtred by seller, item id, and distance
+    const [salesFiltered, setSalesFiltered] = useState<SaleDataT[]>([]);                            // sales filtered by seller, item id, and distance
     const [itemid, setItemid] = useState<string>("");                                               // mc item id from input
     const [seller, setSeller] = useState<string>("");                                               // seller from input
     const [maxPrice, setMaxPrice] = useState<number>(0);                                            // max price from input
@@ -40,12 +40,14 @@ export default function Home() {
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);                               // for settings tab
 
     // all of this stuff is needed for config
-    const [conf_sd, conf_setSd] = useState<number | null>(null);
+    const [conf_sd,  conf_setSd] =  useState<number  | null>(null);
     const [conf_lsd, conf_setLsd] = useState<boolean | null>(null);
+    const [conf_sbl, conf_setSbl] = useState<string  | null>(null);
 
     useEffect(() => {
         conf_setSd(Number(localStorage.getItem("sd")));
         conf_setLsd(localStorage.getItem("lsd") == "true");
+        conf_setSbl(localStorage.getItem("sbl"));
         fetch("/api/sales").then((res) => res.json()).then((data: SaleDataT[]) => {
             setSales(data);
         })
@@ -53,13 +55,15 @@ export default function Home() {
 
     useEffect(() => { conf_sd !== null ? localStorage.setItem("sd", conf_sd.toString()) : null; }, [conf_sd]);
     useEffect(() => { conf_lsd !== null ? localStorage.setItem("lsd", String(conf_lsd)) : null; }, [conf_lsd]);
+    useEffect(() => { conf_sbl !== null ? localStorage.setItem("sbl", conf_sbl) : null; }, [conf_sbl]);
 
     useEffect(() => {
-        let tmp: SaleDataT[] = sales.filter((sale) => {
-            return  sale.shop.seller.includes(seller.trim()) &&                                                         // seller
-                    (sale.mcItemId.includes(itemid.trim().replaceAll(" ", "_")) || sale.mcItemId.includes(itemid)) &&   // real or displayed item name
-                    (itemid.trim().length == 0 && itemid.length != 0 ? sale.mcItemId.includes("_") : true) &&           // spaces, because without that typing single space would still display every item
-                    (!conf_lsd || (conf_sd === null ? 0 : conf_sd) >= dist3d(sale.shop.location, {x: 0, y: 0, z: 0}));  // last check because expensive calc. conf_sd check should never happen because !null on conf_lsd is true, but who knows
+        let tmp: SaleDataT[] = sales.filter((sale) => { // is that hard to read?
+            return  (conf_sbl === null || conf_sbl.split(";").findIndex((el) => { return el.trim() == sale.shop.seller; }) == -1) &&                                                                                            // block sellers from the blacklist
+                    (seller.trim().length == 0 || seller.split(";").findIndex((el) => { return el.trim().length != 0 && sale.shop.seller.includes(el.trim()); }) != -1) &&                                                      // sellers, separated by semicolons
+                    (itemid.trim().length == 0 || itemid.split(";").findIndex((el) => { return el.trim().length != 0 && (sale.mcItemId.includes(el.trim().replaceAll(" ", "_")) || sale.mcItemId.includes(el)); }) != -1) &&    // items, separated by semicolons
+                    (itemid.trim().length == 0 && itemid.length != 0 ? sale.mcItemId.includes("_") : true) &&                                                                                                                   // spaces, because without that typing single space would still display every item
+                    (!conf_lsd || (conf_sd === null ? 0 : conf_sd) >= dist3d(sale.shop.location, {x: 0, y: 0, z: 0}));                                                                                                          // last check because expensive calc. conf_sd check should never happen because !null on conf_lsd is true, but who knows
                 }).toSorted((a: SaleDataT, b: SaleDataT) => {
                 // cheapest stuff first
                 let pd: number = (b.quantity/b.price)-(a.quantity/a.price);
@@ -78,7 +82,7 @@ export default function Home() {
         });
 
         setMaxPrice(maxPrice == 0 ? lmx : maxPrice);
-    }, [itemid, seller, sales, conf_sd, conf_lsd]);
+    }, [itemid, seller, sales, conf_sd, conf_lsd, conf_sbl]);
 
     return (
         <div className="w-screen h-screen overflow-clip flex flex-row portrait:flex-col">
@@ -90,6 +94,10 @@ export default function Home() {
                         </label>
                         <label className="p-4 w-full h-16 drop-shadow-sm text-2xl text-neutral-400">
                             search distance: <input className="w-20 bg-transparent" type="number" min="0" value={conf_sd !== null ? conf_sd : 0} onInput={(e) => {conf_setSd(Number(e.currentTarget.value))}} />
+                        </label>
+                        <label className="p-4 w-full h-24 drop-shadow-sm text-2xl text-neutral-400">
+                            sellers blacklist:<br />
+                            <input className="hover:placeholder:text-neutral-300 placeholder:text-neutral-400 text-neutral-200 bg-transparent w-full focus:outline-none" placeholder="Player1;Player2" value={conf_sbl !== null ? conf_sbl : ""} onInput={(e) => {conf_setSbl(e.currentTarget.value)}}/>
                         </label>
                     </>
                     :
