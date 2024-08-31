@@ -14,7 +14,7 @@ function SaleEntry({s, setItemid, setSeller}: {s: SaleDataT, setItemid: React.Di
     function clickItem() { setItemid(s.mcItemId); }
 
     return (
-        <div className="w-full text-base lg:text-lg xl:text-2xl flex flex-row h-16 bg-neutral-800/75 backdrop-blur-xl backdrop-saturate-150 items-center justify-between">
+        <div className="w-full text-base lg:text-lg xl:text-2xl flex flex-row h-16 glass items-center justify-between">
             <div className="h-full lg:w-1/3 flex flex-row items-center">
                 <img alt="" className="cursor-pointer aspect-square h-12 mx-2" src={`/api/textures/1.20.2?t=${s.mcItemId}`} onClick={clickItem} />
                 <div className="hidden md:block capitalize">{s.mcItemId.replaceAll("_", " ")}</div>

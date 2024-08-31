@@ -1,6 +1,6 @@
 export function Sidebar({children, links}: {children?: React.ReactNode, links: {title: string, href: string | (() => void)}[]}) {
     return (
-        <nav className="h-full portrait:h-fit w-72 portrait:w-full bg-neutral-800/70 backdrop-blur-xl flex flex-col justify-between drop-shadow-md">
+        <nav className="h-full portrait:h-fit w-72 portrait:w-full glass flex flex-col justify-between drop-shadow-md">
             <div className="w-full flex items-center justify-center flex-col">
                 {children}
             </div>

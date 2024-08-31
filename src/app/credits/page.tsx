@@ -5,7 +5,7 @@ export default function Page() {
         <div className="w-screen h-screen overflow-clip flex flex-row portrait:flex-col">
             <Sidebar links={[{title: "HOME", href: "/"}]}/>
             <main className="h-full flex-grow overflow-clip portrait:p-2 p-2 md:p-4 lg:p-8 text-neutral-400">
-                <div className="relative p-2 w-full h-full bg-neutral-800/75 backdrop-blur-xl backdrop-saturate-150 flex flex-col items-start justify-between">
+                <div className="relative p-2 w-full h-full glass flex flex-col items-start justify-between">
                     <table className="w-full sm:w-1/2 md:w-1/4 text-2xl">
                         <tbody>
                             <tr>

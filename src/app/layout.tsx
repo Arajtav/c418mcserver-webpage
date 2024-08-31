@@ -1,5 +1,6 @@
 import "./globals.css";
 
+import { Metadata } from "next";
 import { VT323 } from "next/font/google";
 
 // no fallbacks, also maybe change that font so something more readable
@@ -10,12 +11,10 @@ const font = VT323({
     fallback: ['VT323'],
 });
 
-import { Metadata } from "next";
-
 export const metadata: Metadata = {
-    title: "c418 mc server",
-    description: "not ready yet",
-    authors: [{name: "Aräjtav"}],
+    title: "C418 mc server",
+    description: "Webpage I made to track prices of stuff on C418 minecraft server",
+    authors: [{name: "Aräjtav", url: "https://arajtav.com"}],
     creator: "Aräjtav",
     robots: {
         index: false,
@@ -31,7 +30,7 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" className={font.className}>
-            <body className="text-neutral-200">{children}</body>
+            <body className="text-neutral-200 bg-image-default bg-fixed bg-center bg-cover selection:bg-neutral-200 selection:text-neutral-700">{children}</body>
         </html>
     );
 }
