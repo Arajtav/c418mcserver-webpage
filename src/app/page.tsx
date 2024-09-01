@@ -59,13 +59,14 @@ export default function Home() {
 
     useEffect(() => {
         let tmp: SaleDataT[] = sales.filter((sale) => { // is that hard to read?
-            return  (conf_sbl === null || conf_sbl.split(";").findIndex((el) => { return el.trim() == sale.shop.seller; }) == -1) &&                                                                                            // block sellers from the blacklist
+            return  (sale.price != 0) &&                                                                                                                                                                                        // free stuff breaks code, maybe i will create separate page for free items
+                    (conf_sbl === null || conf_sbl.split(";").findIndex((el) => { return el.trim() == sale.shop.seller; }) == -1) &&                                                                                            // block sellers from the blacklist
                     (seller.trim().length == 0 || seller.split(";").findIndex((el) => { return el.trim().length != 0 && sale.shop.seller.includes(el.trim()); }) != -1) &&                                                      // sellers, separated by semicolons
                     (itemid.trim().length == 0 || itemid.split(";").findIndex((el) => { return el.trim().length != 0 && (sale.mcItemId.includes(el.trim().replaceAll(" ", "_")) || sale.mcItemId.includes(el)); }) != -1) &&    // items, separated by semicolons
                     (itemid.trim().length == 0 && itemid.length != 0 ? sale.mcItemId.includes("_") : true) &&                                                                                                                   // spaces, because without that typing single space would still display every item
                     (!conf_lsd || (conf_sd === null ? 0 : conf_sd) >= dist3d(sale.shop.location, {x: 0, y: 0, z: 0}));                                                                                                          // last check because expensive calc. conf_sd check should never happen because !null on conf_lsd is true, but who knows
                 }).toSorted((a: SaleDataT, b: SaleDataT) => {
-                // cheapest stuff first
+                // cheapest stuff first (unless it's free)
                 let pd: number = (b.quantity/b.price)-(a.quantity/a.price);
                 if (pd != 0) { return pd; }
                 // if price is the same for both items, return one which has lower quantity
@@ -97,7 +98,7 @@ export default function Home() {
                         </label>
                         <label className="p-4 w-full h-24 drop-shadow-sm text-2xl text-neutral-400">
                             sellers blacklist:<br />
-                            <input className="hover:placeholder:text-neutral-300 placeholder:text-neutral-400 text-neutral-200 bg-transparent w-full focus:outline-none" placeholder="Player1;Player2" value={conf_sbl !== null ? conf_sbl : ""} onInput={(e) => {conf_setSbl(e.currentTarget.value)}}/>
+                            <input className="hover:placeholder:text-neutral-300 placeholder:text-neutral-400 text-neutral-200 bg-transparent w-full focus:outline-none" placeholder="Player1;Player2" value={conf_sbl !== null ? conf_sbl : ""} onInput={(e) => {conf_setSbl(e.currentTarget.value)}} />
                         </label>
                     </>
                     :
@@ -105,8 +106,8 @@ export default function Home() {
                         <input type="text" value={itemid} placeholder="search by item id" className="search-item focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setItemid(e.currentTarget.value)}} />
                         <input type="text" value={seller} placeholder="search by seller"  className="search-sell focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => {setSeller(e.currentTarget.value)}} />
                         <div className="w-full h-24 px-4 flex justify-center items-start text-2xl flex-col text-neutral-400">
-                            <div>{`max stack price: ${maxPrice <= priceRange.max ? maxPrice >= priceRange.min ? maxPrice : priceRange.min : priceRange.max}`}</div>
-                            <input id="ipm" type="range" className={`w-full drop-shadow-sm accent-neutral-400 hover:accent-neutral-300 focus:outline-none focus:accent-neutral-300 ${priceRange.min == priceRange.max ? "invisible" : ""}`} step="0.001" value={maxPrice <= priceRange.max ? maxPrice >= priceRange.min ? maxPrice : priceRange.min : priceRange.max} min={priceRange.min} max={priceRange.max} onInput={(e) => {setMaxPrice(Number(e.currentTarget.value))}} />
+                            <div>{`max stack price: ${maxPrice <= priceRange.max ? maxPrice >= priceRange.min ? Math.round(maxPrice*1000)/1000 : Math.round(priceRange.min*1000)/1000 : Math.round(priceRange.max*1000)/1000}`}</div>
+                            <input id="ipm" type="range" className={`w-full drop-shadow-sm accent-neutral-400 hover:accent-neutral-300 focus:outline-none focus:accent-neutral-300 ${priceRange.min == priceRange.max ? "invisible" : ""}`} step="any" value={maxPrice <= priceRange.max ? maxPrice >= priceRange.min ? maxPrice : priceRange.min : priceRange.max} min={priceRange.min} max={priceRange.max} onInput={(e) => {setMaxPrice(Number(e.currentTarget.value))}} />
                         </div>
                     </>
                 }
