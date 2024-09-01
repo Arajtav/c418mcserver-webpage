@@ -3,6 +3,9 @@ import { SaleDataT } from "@/types";
 import { Database } from "@/sql";
 import { createKysely } from '@vercel/postgres-kysely';
 
+// maybe, it would be better to have that set to the same value as max age in reponse, but db query is not really that expensive.
+export const revalidate = 3600;
+
 const db = createKysely<Database>();
 
 export async function GET(request: NextRequest) {
