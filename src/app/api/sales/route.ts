@@ -16,7 +16,7 @@ export async function GET(request: NextRequest) {
             return {
                 mcItemId: sale.mcItemId,
                 quantity: sale.quantity,
-                price:    sale.price,
+                price: sale.price,
                 shop: {
                     seller: sale.shop_seller,
                     location: {

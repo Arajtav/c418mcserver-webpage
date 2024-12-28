@@ -14,7 +14,7 @@ const font = VT323({
 export const metadata: Metadata = {
     title: "C418 mc server",
     description: "Webpage I made to track prices of stuff on C418 minecraft server",
-    authors: [{name: "Aräjtav", url: "https://arajtav.com"}],
+    authors: [{ name: "Aräjtav", url: "https://arajtav.com" }],
     creator: "Aräjtav",
     robots: {
         index: false,
