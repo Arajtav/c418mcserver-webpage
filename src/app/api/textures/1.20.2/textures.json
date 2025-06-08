@@ -1,4 +1,4 @@
-export const textures: {[key: string]: {texture: string}} = {
+{
   "missing":{
     "texture":"iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAACXBIWXMAAAsSAAALEgHS3X78AAAAEElEQVQIHWNgYGD4D4UMDAAb8gP96WVavQAAAABJRU5ErkJggg=="
   },
