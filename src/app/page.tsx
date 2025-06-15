@@ -19,7 +19,7 @@ function SaleEntry({ s, setItemid, setSeller }: { s: SaleDataT, setItemid: React
                 <img alt="" className="cursor-pointer aspect-square h-12 mx-2" src={`/api/textures/1.20.2?t=${s.mcItemId}`} onClick={clickItem} />
                 <div className="hidden md:block capitalize">{s.mcItemId.replaceAll("_", " ")}</div>
             </div>
-            <div className="h-full w-1/3 flex-grow lg:flex-grow-0 flex flex-row items-center justify-center">
+            <div className="h-full w-1/3 grow lg:grow-0 flex flex-row items-center justify-center">
                 {nicePriceString(s.price, s.quantity)}
             </div>
             <div className="h-full w-1/3 flex flex-row items-center justify-end pr-2">
@@ -90,29 +90,29 @@ export default function Home() {
             <Sidebar links={[{ title: "SETTINGS", href: () => setSettingsOpen(!settingsOpen) }, { title: "CREDITS", href: "/credits" }]}>
                 {settingsOpen ?
                     <>
-                        <label className="p-4 w-full h-16 drop-shadow-sm text-2xl text-neutral-400">
+                        <label className="p-4 w-full h-16 drop-shadow-xs text-2xl text-neutral-400">
                             limit search distance: <input type="checkbox" checked={conf_lsd !== null ? conf_lsd : false} onChange={(e) => { conf_setLsd(e.currentTarget.checked) }} />
                         </label>
-                        <label className="p-4 w-full h-16 drop-shadow-sm text-2xl text-neutral-400">
+                        <label className="p-4 w-full h-16 drop-shadow-xs text-2xl text-neutral-400">
                             search distance: <input className="w-20 bg-transparent" type="number" min="0" value={conf_sd !== null ? conf_sd : 0} onInput={(e) => { conf_setSd(Number(e.currentTarget.value)) }} />
                         </label>
-                        <label className="p-4 w-full h-24 drop-shadow-sm text-2xl text-neutral-400">
+                        <label className="p-4 w-full h-24 drop-shadow-xs text-2xl text-neutral-400">
                             sellers blacklist:<br />
-                            <input className="hover:placeholder:text-neutral-300 placeholder:text-neutral-400 text-neutral-200 bg-transparent w-full focus:outline-none" placeholder="Player1;Player2" value={conf_sbl !== null ? conf_sbl : ""} onInput={(e) => { conf_setSbl(e.currentTarget.value) }} />
+                            <input className="hover:placeholder:text-neutral-300 placeholder:text-neutral-400 text-neutral-200 bg-transparent w-full focus:outline-hidden" placeholder="Player1;Player2" value={conf_sbl !== null ? conf_sbl : ""} onInput={(e) => { conf_setSbl(e.currentTarget.value) }} />
                         </label>
                     </>
                     :
                     <>
-                        <input type="text" value={itemid} placeholder="search by item id" className="search-item focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => { setItemid(e.currentTarget.value) }} />
-                        <input type="text" value={seller} placeholder="search by seller" className="search-sell focus:outline-none p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-sm text-2xl" onInput={(e) => { setSeller(e.currentTarget.value) }} />
+                        <input type="text" value={itemid} placeholder="search by item id" className="search-item focus:outline-hidden p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-xs text-2xl" onInput={(e) => { setItemid(e.currentTarget.value) }} />
+                        <input type="text" value={seller} placeholder="search by seller" className="search-sell focus:outline-hidden p-4 w-full h-16 hover:placeholder:text-neutral-300 placeholder:text-neutral-400 placeholder:text-2xl bg-transparent drop-shadow-xs text-2xl" onInput={(e) => { setSeller(e.currentTarget.value) }} />
                         <label className="w-full h-24 px-4 flex justify-center items-start text-2xl flex-col text-neutral-400">
                             <div>{`max stack price: ${Math.round(clip(priceRange.min, priceRange.max, maxPrice) * 1000) / 1000}`}</div>
-                            <input id="ipm" type="range" className={`w-full drop-shadow-sm accent-neutral-400 hover:accent-neutral-300 focus:outline-none focus:accent-neutral-300 ${priceRange.min == priceRange.max ? "invisible" : ""}`} step="any" value={clip(priceRange.min, priceRange.max, maxPrice)} min={priceRange.min} max={priceRange.max} onInput={(e) => { setMaxPrice(Number(e.currentTarget.value)) }} />
+                            <input id="ipm" type="range" className={`w-full drop-shadow-xs accent-neutral-400 hover:accent-neutral-300 focus:outline-hidden focus:accent-neutral-300 ${priceRange.min == priceRange.max ? "invisible" : ""}`} step="any" value={clip(priceRange.min, priceRange.max, maxPrice)} min={priceRange.min} max={priceRange.max} onInput={(e) => { setMaxPrice(Number(e.currentTarget.value)) }} />
                         </label>
                     </>
                 }
             </Sidebar>
-            <main className="h-full flex-grow overflow-scroll portrait:p-2 p-2 md:p-4 lg:p-8">
+            <main className="h-full grow overflow-scroll portrait:p-2 p-2 md:p-4 lg:p-8">
                 {salesFiltered.filter((sale) => {
                     let tmp = clip(priceRange.min, priceRange.max, maxPrice);
                     return (tmp == 0 || 64 * sale.price / sale.quantity <= tmp);
