@@ -5,10 +5,10 @@ import { VT323 } from "next/font/google";
 
 // no fallbacks, also maybe change that font so something more readable
 const font = VT323({
-    weight: ['400'],
+    weight: ["400"],
     subsets: ["latin-ext"],
-    display: 'swap',
-    fallback: ['VT323'],
+    display: "swap",
+    fallback: ["VT323"],
 });
 
 export const metadata: Metadata = {
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
         follow: false,
         nocache: true,
     },
-}
+};
 
 export default function RootLayout({
     children,
@@ -30,7 +30,9 @@ export default function RootLayout({
 }>) {
     return (
         <html lang="en" className={font.className}>
-            <body className="text-neutral-200 bg-image-default bg-fixed bg-center bg-cover selection:bg-neutral-200 selection:text-neutral-700">{children}</body>
+            <body className="text-neutral-200 bg-image-default bg-fixed bg-center bg-cover selection:bg-neutral-200 selection:text-neutral-700">
+                {children}
+            </body>
         </html>
     );
 }

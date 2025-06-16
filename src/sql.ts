@@ -11,4 +11,6 @@ export interface SalesTable {
     shop_location_z: number;
 }
 
-export interface Database { sales: SalesTable; }
+export interface Database {
+    sales: SalesTable;
+}
