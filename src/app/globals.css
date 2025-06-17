@@ -11,3 +11,13 @@ img {
 .glass {
     @apply bg-neutral-800/75 backdrop-blur-xs backdrop-saturate-150;
 }
+
+.no-spin {
+    -moz-appearance: textfield;
+}
+
+.no-spin::-webkit-inner-spin-button,
+.no-spin::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}

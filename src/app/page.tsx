@@ -1,21 +1,30 @@
 "use client";
 
 import { Sidebar } from "@/sidebar";
-import { SaleDataT } from "@/types";
+import { Location, SaleDataT } from "@/types";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
-import { clip, dist3d, formatPriceString, formatShopLocation, pricePerStack } from "./utils";
+import {
+    clip,
+    dist3d,
+    formatPriceString,
+    formatShopLocation,
+    pricePerStack,
+    niceRound,
+    formatDistance,
+} from "./utils";
+import { useLocalStorage } from "usehooks-ts";
 
 function SaleEntry({
     sale,
     setItemId,
     setSeller,
 }: {
-    sale: SaleDataT;
+    sale: SaleDataT & { distance: number };
     setItemId: Dispatch<SetStateAction<string>>;
     setSeller: Dispatch<SetStateAction<string>>;
 }) {
     return (
-        <div className="w-full text-base lg:text-lg xl:text-2xl flex flex-row h-16 glass items-center justify-between">
+        <div className="w-full text-xs sm:text-sm md:text-base lg:text-lg xl:text-2xl flex flex-row h-16 glass items-center justify-between">
             <div className="h-full lg:w-1/3 flex flex-row items-center">
                 <img
                     alt=""
@@ -32,16 +41,17 @@ function SaleEntry({
             <div className="h-full w-1/3 grow lg:grow-0 flex flex-row items-center justify-center">
                 {formatPriceString(sale.price, sale.quantity)}
             </div>
-            <div className="h-full w-1/3 flex flex-row items-center justify-end pr-2">
+            <div className="h-full w-1/3 flex flex-row items-center justify-end pr-2 gap-[1ch]">
                 <span
-                    className="pr-2 cursor-pointer"
+                    className="cursor-pointer"
                     onClick={() => {
                         setSeller(sale.shop.seller);
                     }}
                 >
                     {sale.shop.seller}
                 </span>
-                {formatShopLocation(sale.shop.location)}
+                <div>{formatShopLocation(sale.shop.location)}</div>
+                <div>({formatDistance(sale.distance)})</div>
             </div>
         </div>
     );
@@ -51,7 +61,7 @@ export default function Home() {
     // Fetched sales.
     const [sales, setSales] = useState<SaleDataT[]>([]);
     // Filtered sales (except for the price).
-    const [salesFiltered, setSalesFiltered] = useState<SaleDataT[]>([]);
+    const [salesFiltered, setSalesFiltered] = useState<(SaleDataT & { distance: number })[]>([]);
     // Item id from the input.
     const [itemId, setItemId] = useState<string>("");
     // Seller from the input.
@@ -64,15 +74,13 @@ export default function Home() {
     const [settingsOpen, setSettingsOpen] = useState<boolean>(false);
 
     // The persistent config from the settings tab.
-    const [searchDistance, setSearchDistance] = useState<number | null>(null);
-    const [limitByDistance, setLimitByDistance] = useState<boolean | null>(null);
-    const [sellerBlacklist, setSellerBlacklist] = useState<string | null>(null);
+    const [searchDistance, setSearchDistance] = useLocalStorage("searchDistance", 1);
+    const [limitByDistance, setLimitByDistance] = useLocalStorage("limitByDistance", false);
+    const [sellerBlacklist, setSellerBlacklist] = useLocalStorage("sellerBlacklist", "");
+    const [baseLocation, setBaseLocation] = useLocalStorage("baseLocation", { x: 0, y: 0, z: 0 });
 
     // Read the settings, fetch the sales.
     useEffect(() => {
-        setSearchDistance(Number(localStorage.getItem("search_distance")));
-        setLimitByDistance(localStorage.getItem("limit_by_distance") == "true");
-        setSellerBlacklist(localStorage.getItem("sellers_blacklist"));
         fetch("/api/sales")
             .then(res => res.json())
             .then((data: SaleDataT[]) => {
@@ -80,26 +88,9 @@ export default function Home() {
             });
     }, []);
 
-    // Save the settings on changes.
-    useEffect(() => {
-        searchDistance !== null
-            ? localStorage.setItem("search_distance", searchDistance.toString())
-            : null;
-    }, [searchDistance]);
-    useEffect(() => {
-        limitByDistance !== null
-            ? localStorage.setItem("limit_by_distance", String(limitByDistance))
-            : null;
-    }, [limitByDistance]);
-    useEffect(() => {
-        sellerBlacklist !== null
-            ? localStorage.setItem("sellers_blacklist", sellerBlacklist)
-            : null;
-    }, [sellerBlacklist]);
-
     // Filter the sales.
     useEffect(() => {
-        let filtered: SaleDataT[] = sales
+        let filtered = sales
             // TODO: free stuff breaks the code.
             .filter(sale => sale.price >= 0)
             // Block sellers from the blacklist.
@@ -141,17 +132,19 @@ export default function Home() {
                 if (!itemId) return true;
                 return sale.mcItemId.includes("_");
             })
-            // Limit by search distance when enabled and when search distance is greater than 0.
-            .filter(
-                sale =>
-                    !limitByDistance ||
-                    !searchDistance ||
-                    searchDistance >= dist3d(sale.shop.location, { x: 0, y: 0, z: 0 })
-            )
-            .toSorted((a: SaleDataT, b: SaleDataT) => {
+            .map(sale => {
+                return { ...sale, distance: dist3d(sale.shop.location, baseLocation) };
+            })
+            // Limit by search distance when enabled.
+            .filter(sale => !limitByDistance || searchDistance >= sale.distance)
+            .toSorted((a, b) => {
                 // Cheapest stuff first.
                 const priceDifference = pricePerStack(a) - pricePerStack(b);
                 if (priceDifference) return priceDifference;
+
+                // Closer stuff first.
+                const distanceDifference = a.distance - b.distance;
+                if (distanceDifference) return distanceDifference;
 
                 // Lower quantity first.
                 const quantityDifference: number = a.quantity - b.quantity;
@@ -166,7 +159,7 @@ export default function Home() {
         setPriceRange({ min, max });
 
         setMaxPrice(maxPrice || max);
-    }, [itemId, seller, sales, searchDistance, limitByDistance, sellerBlacklist]);
+    }, [itemId, seller, sales, searchDistance, limitByDistance, sellerBlacklist, baseLocation]);
 
     return (
         <div className="w-screen h-screen overflow-clip flex flex-row portrait:flex-col">
@@ -184,6 +177,8 @@ export default function Home() {
                         setSearchDistance={setSearchDistance}
                         sellerBlacklist={sellerBlacklist}
                         setSellerBlacklist={setSellerBlacklist}
+                        baseLocation={baseLocation}
+                        setBaseLocation={setBaseLocation}
                     />
                 ) : (
                     <SearchBar
@@ -254,7 +249,7 @@ function SearchBar({
                 }}
             />
             <label className="w-full h-24 px-4 flex justify-center items-start text-2xl flex-col text-neutral-400">
-                <div>{`max stack price: ${Math.round(clip(priceRange.min, priceRange.max, maxPrice) * 1000) / 1000}`}</div>
+                <div>{`max stack price: ${niceRound(clip(priceRange.min, priceRange.max, maxPrice))}`}</div>
                 <input
                     type="range"
                     className={`w-full drop-shadow-xs accent-neutral-400 hover:accent-neutral-300 focus:outline-hidden focus:accent-neutral-300 ${priceRange.min == priceRange.max ? "invisible" : ""}`}
@@ -278,13 +273,17 @@ function Settings({
     setSearchDistance,
     sellerBlacklist,
     setSellerBlacklist,
+    baseLocation,
+    setBaseLocation,
 }: {
-    limitByDistance: boolean | null;
-    setLimitByDistance: Dispatch<SetStateAction<boolean | null>>;
-    searchDistance: number | null;
-    setSearchDistance: Dispatch<SetStateAction<number | null>>;
-    sellerBlacklist: string | null;
-    setSellerBlacklist: Dispatch<SetStateAction<string | null>>;
+    limitByDistance: boolean;
+    setLimitByDistance: Dispatch<SetStateAction<boolean>>;
+    searchDistance: number;
+    setSearchDistance: Dispatch<SetStateAction<number>>;
+    sellerBlacklist: string;
+    setSellerBlacklist: Dispatch<SetStateAction<string>>;
+    baseLocation: Location;
+    setBaseLocation: Dispatch<SetStateAction<Location>>;
 }) {
     return (
         <>
@@ -293,7 +292,7 @@ function Settings({
                 <input
                     className="ml-[1ch]"
                     type="checkbox"
-                    checked={!!limitByDistance}
+                    checked={limitByDistance}
                     onChange={e => {
                         setLimitByDistance(e.currentTarget.checked);
                     }}
@@ -302,10 +301,10 @@ function Settings({
             <label className="p-4 w-full h-16 drop-shadow-xs text-2xl text-neutral-400">
                 search distance:
                 <input
-                    className="w-20 bg-transparent ml-[1ch]"
+                    min="1"
+                    className="w-20 bg-transparent ml-[1ch] no-spin"
                     type="number"
-                    min="0"
-                    value={searchDistance ?? 0}
+                    value={searchDistance}
                     onInput={e => {
                         setSearchDistance(Number(e.currentTarget.value));
                     }}
@@ -316,11 +315,46 @@ function Settings({
                 <input
                     className="hover:placeholder:text-neutral-300 placeholder:text-neutral-400 text-neutral-200 bg-transparent w-full focus:outline-hidden"
                     placeholder="Player1;Player2"
-                    value={sellerBlacklist || ""}
+                    value={sellerBlacklist}
                     onInput={e => {
                         setSellerBlacklist(e.currentTarget.value);
                     }}
                 />
+            </label>
+            <label className="p-4 w-full h-24 drop-shadow-xs text-2xl text-neutral-400">
+                base location:
+                <div className="text-neutral-200 w-full flex *:flex-1 *:w-full">
+                    <input
+                        className="no-spin"
+                        type="number"
+                        value={baseLocation.x}
+                        onInput={e => {
+                            setBaseLocation(bl => {
+                                return { ...bl, x: Number(e.currentTarget.value) };
+                            });
+                        }}
+                    ></input>
+                    <input
+                        className="no-spin"
+                        type="number"
+                        value={baseLocation.y}
+                        onInput={e => {
+                            setBaseLocation(bl => {
+                                return { ...bl, y: Number(e.currentTarget.value) };
+                            });
+                        }}
+                    ></input>
+                    <input
+                        className="no-spin"
+                        type="number"
+                        value={baseLocation.z}
+                        onInput={e => {
+                            setBaseLocation(bl => {
+                                return { ...bl, z: Number(e.currentTarget.value) };
+                            });
+                        }}
+                    ></input>
+                </div>
             </label>
         </>
     );

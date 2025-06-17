@@ -38,3 +38,14 @@ export function formatShopLocation(location: Location) {
 export function pricePerStack(sale: SaleDataT) {
     return (64 * sale.price) / sale.quantity;
 }
+
+export function niceRound(value: number, places: number = 3) {
+    return Math.round(value * Math.pow(10, places)) / Math.pow(10, places);
+}
+
+export function formatDistance(blocks: number) {
+    const value = Math.ceil(blocks);
+    if (value == 1) return "1 block";
+    if (value < 1000) return `${value} blocks`;
+    return `${niceRound(value / 1000, 1)}K blocks`;
+}
