@@ -29,7 +29,7 @@ function SaleEntry({
                 <img
                     alt=""
                     className="cursor-pointer h-12 w-12 mx-2"
-                    src={`/api/textures/1.20.2?t=${sale.mcItemId}`}
+                    src={`/api/textures/1.21.8?t=${sale.mcItemId}`}
                     onClick={() => {
                         setItemId(sale.mcItemId);
                     }}

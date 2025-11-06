@@ -1,0 +1,23 @@
+#!/bin/env node
+
+/*
+ * this script fetches PrismarineJS/minecraft-assets textures json file and transforms it a little.
+ * replace the url and rerun to generate the textures for different versions.
+ * remember to add manually colored textures back.
+ */
+
+const url =
+    "https://raw.githubusercontent.com/PrismarineJS/minecraft-assets/7926330382c886122aee42b3531b4992b3807583/data/1.21.8/texture_content.json";
+
+(async () => {
+    const raw = await fetch(url);
+    const textures = await raw.json();
+
+    const out = new Map();
+    for (const b of textures) {
+        if (!b.texture) continue;
+        out.set(b.name, b.texture.slice(22));
+    }
+
+    console.log(JSON.stringify(Object.fromEntries(out), null, 2));
+})();

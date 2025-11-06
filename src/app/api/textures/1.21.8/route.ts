@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import rawTextures from "./textures.json";
 
-const textures = new Map<string, string>(
-    Object.entries(rawTextures).map(([key, value]) => [key, value.texture])
+const textures = new Map<string, string>(Object.entries(rawTextures));
+
+const missing = Buffer.from(
+    "iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAIAAAD91JpzAAAACXBIWXMAAAsSAAALEgHS3X78AAAAEElEQVQIHWNgYGD4D4UMDAAb8gP96WVavQAAAABJRU5ErkJggg==",
+    "base64"
 );
 
 export async function GET(request: NextRequest) {
@@ -15,7 +18,7 @@ export async function GET(request: NextRequest) {
 
     let texture = textures.get(t);
     if (!texture) {
-        return new NextResponse(Buffer.from(textures.get("missing")!, "base64"), {
+        return new NextResponse(missing, {
             status: 404,
             headers: {
                 "Content-Type": "image/png",

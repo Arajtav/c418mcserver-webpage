@@ -9,25 +9,20 @@ export const revalidate = 3600;
 const db = createKysely<Database>();
 
 export async function GET() {
-    let sales: SaleDataT[];
     try {
         const result = await db.selectFrom("sales").selectAll().execute();
-        sales = result.map(sale => nestObject(sale) as SaleDataT);
+        return NextResponse.json(
+            result.map(sale => nestObject(sale) as SaleDataT),
+            {
+                status: 200,
+                headers: {
+                    "Cache-Control": `max-age=${revalidate}`,
+                },
+            }
+        );
     } catch (error) {
         console.error("db fetch for sales failed");
-        return new NextResponse("[]", {
-            status: 500,
-            headers: {
-                "Content-Type": "application/json",
-            },
-        });
     }
 
-    return new NextResponse(JSON.stringify(sales), {
-        status: 200,
-        headers: {
-            "Content-Type": "application/json",
-            "Cache-Control": `max-age=${revalidate}`,
-        },
-    });
+    return NextResponse.json([], { status: 500 });
 }
