@@ -91,8 +91,6 @@ export default function Home() {
     // Filter the sales.
     useEffect(() => {
         let filtered = sales
-            // TODO: free stuff breaks the code.
-            .filter(sale => sale.price >= 0)
             // Block sellers from the blacklist.
             .filter(sale => {
                 if (!sellerBlacklist) return true;
@@ -196,7 +194,7 @@ export default function Home() {
                 {salesFiltered
                     .filter(sale => {
                         let current_max = clip(priceRange.min, priceRange.max, maxPrice);
-                        return !current_max || pricePerStack(sale) <= current_max;
+                        return pricePerStack(sale) <= current_max;
                     })
                     .map(sale => (
                         <SaleEntry

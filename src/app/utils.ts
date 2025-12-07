@@ -24,6 +24,7 @@ export function nestObject(obj: Record<string, any>): Record<string, any> {
 }
 
 export function formatPriceString(price: number, quantity: number): string {
+    if (price == 0) return "free";
     const isStacked = !(quantity % 64);
     const amount = isStacked ? quantity / 64 : quantity;
     const unit = isStacked ? (amount == 1 ? " stack" : " stacks") : "";
